@@ -5,7 +5,7 @@ import os
 app = Flask(__name__)
 
 # Conexión a la base de datos (PostgreSQL en Supabase o un servicio similar)
-DATABASE_URL = os.environ.get('DATABASE_URL')  # Configura esta variable de entorno en Render
+DATABASE_URL = os.environ.get('postgresql://postgres.hwuuwwjjqqpqffhfxama:[YOUR-PASSWORD]@aws-0-us-west-1.pooler.supabase.com:6543/postgres')  # Configura esta variable de entorno en Render
 
 def connect_db():
     conn = psycopg2.connect(DATABASE_URL)

@@ -1,35 +1,33 @@
-# app.py
 from flask import Flask, request, jsonify
-import requests  # Para hacer solicitudes HTTP a otros servicios
+import psycopg2
+import os
 
 app = Flask(__name__)
 
-# Endpoint para obtener información desde Servicio B (Express.js)
-@app.route('/from_service_b', methods=['GET'])
-def get_data_from_service_b():
-    try:
-        # Llamar al endpoint del servicio B
-        response = requests.get('https://express-service-url.com/data')
-        data = response.json()
-        return jsonify(data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+# Conexión a la base de datos (PostgreSQL en Supabase o un servicio similar)
+DATABASE_URL = os.environ.get('DATABASE_URL')  # Configura esta variable de entorno en Render
 
-# Endpoint para Servicio C (FastAPI) llamando a este servicio
-@app.route('/data', methods=['GET'])
-def get_data():
-    return jsonify({"service": "A", "message": "Hello from Flask!"})
+def connect_db():
+    conn = psycopg2.connect(DATABASE_URL)
+    return conn
 
-# Endpoint para conectarse a Servicio D (Fastify)
-@app.route('/from_service_d', methods=['GET'])
-def get_data_from_service_d():
-    try:
-        # Llamar al endpoint del servicio D
-        response = requests.get('https://fastify-service-url.com/data')
-        data = response.json()
-        return jsonify(data), 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+@app.route('/login', methods=['POST'])
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    conn = connect_db()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = %s AND password = %s", (username, password))
+    user = cursor.fetchone()
+    cursor.close()
+    conn.close()
+
+    if user:
+        return jsonify({"message": "Login successful!"}), 200
+    else:
+        return jsonify({"message": "Invalid credentials"}), 401
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000)
